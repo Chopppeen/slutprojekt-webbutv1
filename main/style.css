@@ -163,13 +163,13 @@ body {
 }
 
 .buy-btn {
-    background: #0f9d58;
+    background: #0f9d58a9;
     color: #ffffff;
     border-color: #0b7c45;
 }
 
 .sell-btn {
-    background: #e63946;
+    background: #e63947a2;
     color: #ffffff;
     border-color: #b62c37;
 }
