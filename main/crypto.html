@@ -9,16 +9,15 @@
     <script src="index.js" defer></script>
     <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 
-
 </head>
 <body>
      <div class="page-shell">
         <aside class="sidebar">
             <h2>Watchlist</h2>
             <ul>
-                <li class="watchlist-item"><a href="#" onclick="loadChart('BTC', 'crypto.html')">BTC <span id="price-btc"></span></a></li>
-                <li class="watchlist-item"><a href="#" onclick="loadChart('SOL', 'crypto.html')">SOL <span id="price-sol"></span></a></li>
-                <li class="watchlist-item"><a href="#" onclick="loadChart('ETH', 'crypto.html')">ETH <span id="price-eth"></span></a></li>
+                <li class="watchlist-item"><a href="crypto.html">BTC <span id="price-btc"></span></a></li>
+                <li class="watchlist-item"><a href="crypto.html">SOL <span id="price-sol"></span></a></li>
+                <li class="watchlist-item"><a href="crypto.html">ETH <span id="price-eth"></span></a></li>
             </ul>
 
             <h2>Stocks</h2>
@@ -43,7 +42,9 @@
              <div class="right-body">
                  <section class="chart">
                     <h2>Chart crypto</h2>
-                    <p>Här sätter vi API för BTC och SOL.</p>
+                    <div id="chart-container" style="width: 100%; height: 300px;"></div>
+                    
+
                  </section>
                  <aside class="trade-sidebar">
                     <h2>Trade</h2>
