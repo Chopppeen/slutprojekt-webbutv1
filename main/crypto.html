@@ -14,17 +14,19 @@
      <div class="page-shell">
         <aside class="sidebar">
             <h2>Watchlist</h2>
+            <h3>Crypto</h3>
             <ul>
-                <li class="watchlist-item"><a href="crypto.html">BTC <span id="price-btc"></span></a></li>
-                <li class="watchlist-item"><a href="crypto.html">SOL <span id="price-sol"></span></a></li>
-                <li class="watchlist-item"><a href="crypto.html">ETH <span id="price-eth"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('BTC', 'crypto.html')">BTC <span id="price-btc"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('SOL', 'crypto.html')">SOL <span id="price-sol"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('ETH', 'crypto.html')">ETH <span id="price-eth"></span></a></li>
             </ul>
 
-            <h2>Stocks</h2>
+            <h3>Stocks</h3>
+
             <ul>
-                <li class="watchlist-item"><a href="stock.html">AAPL <span id="price-aapl"></span></a></li>
-                <li class="watchlist-item"><a href="stock.html">GOOGL <span id="price-googl"></span></a></li>
-                <li class="watchlist-item"><a href="stock.html">MSFT <span id="price-msft"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('AAPL', 'stock.html')">AAPL <span id="price-aapl"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('GOOGL', 'stock.html')">GOOGL <span id="price-googl"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('MSFT', 'stock.html')">MSFT <span id="price-msft"></span></a></li>
             </ul>
         </aside>
         <div class="right-area">
@@ -41,7 +43,7 @@
              </section>
              <div class="right-body">
                  <section class="chart">
-                    <h2>Chart crypto</h2>
+                    <h2 id="chart-title">Chart crypto</h2>
                     <div id="chart-container" style="width: 100%; height: 300px;"></div>
                     
 

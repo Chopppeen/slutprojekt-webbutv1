@@ -1,6 +1,7 @@
 let cash = parseFloat(localStorage.getItem('cash')) || 10000
 let holdings = JSON.parse(localStorage.getItem('holdings')) || {}
-const price = 67000 // hårdkodad tills API:et kommer
+let currentPrice = 0
+let lineSeries = null
 
 function updateWallet() {
     document.getElementById('cash').textContent = '$' + cash.toFixed(2)
@@ -9,12 +10,10 @@ function updateWallet() {
 
 document.getElementById('buy-btn').addEventListener('click', function() {
     const shares = parseFloat(document.getElementById('shares-input').value)
-    const total = shares * price
-
+    const total = shares * currentPrice
     if (cash >= total) {
         cash -= total
         updateWallet()
-        console.log('Köpte', shares, 'shares!')
     } else {
         alert('Inte tillräckligt med pengar!')
     }
@@ -22,10 +21,9 @@ document.getElementById('buy-btn').addEventListener('click', function() {
 
 document.getElementById('sell-btn').addEventListener('click', function() {
     const shares = parseFloat(document.getElementById('shares-input').value)
-    const total = shares * price
+    const total = shares * currentPrice
     cash += total
     updateWallet()
-    console.log('Sålde', shares, 'shares!')
 })
 
 updateWallet()
@@ -39,34 +37,100 @@ async function getStockPrice(symbol) {
 }
 
 async function getCryptoPrices() {
-    const res = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,SOL&tsyms=USD', {
-        headers: { 'Accept': 'application/json' }
-    })
+    const res = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,SOL&tsyms=USD')
     const data = await res.json()
     return data
 }
 
 async function updatePrices() {
+    try {
+        const crypto = await getCryptoPrices()
+        document.getElementById('price-btc').textContent = '$' + crypto.BTC.USD.toLocaleString()
+        document.getElementById('price-eth').textContent = '$' + crypto.ETH.USD.toLocaleString()
+        document.getElementById('price-sol').textContent = '$' + crypto.SOL.USD.toLocaleString()
 
-    const crypto = await getCryptoPrices()
-    document.getElementById('price-btc').textContent = '$' + crypto.BTC.USD.toLocaleString()
-    document.getElementById('price-eth').textContent = '$' + crypto.ETH.USD.toLocaleString()
-    document.getElementById('price-sol').textContent = '$' + crypto.SOL.USD.toLocaleString()
+        const aapl = await getStockPrice('AAPL')
+        const googl = await getStockPrice('GOOGL')
+        const msft = await getStockPrice('MSFT')
+        document.getElementById('price-aapl').textContent = '$' + aapl.toLocaleString()
+        document.getElementById('price-googl').textContent = '$' + googl.toLocaleString()
+        document.getElementById('price-msft').textContent = '$' + msft.toLocaleString()
+    } catch (err) {
+        console.log('updatePrices fel:', err)
+    }
+}
 
-    const aapl = await getStockPrice('AAPL')
-    const tsla = await getStockPrice('GOOGL')
-    const nvda = await getStockPrice('MSFT')
-    document.getElementById('price-aapl').textContent = '$' + aapl.toLocaleString()
-    document.getElementById('price-googl').textContent = '$' + tsla.toLocaleString()
-    document.getElementById('price-msft').textContent = '$' + nvda.toLocaleString()
+function updateChartTitle(symbol) {
+    const title = document.getElementById('chart-title')
+    if (title) {
+        title.textContent = symbol
+    }
 }
 
 updatePrices()
 
-let lineSeries = null
+async function getChartData(symbol) {
+    try {
+        const res = await fetch(`https://min-api.cryptocompare.com/data/v2/histoday?fsym=${symbol}&tsym=USD&limit=30`)
+        const data = await res.json()
+        if (!data.Data || !data.Data.Data) return []
+        return data.Data.Data.map(d => ({
+            time: d.time,
+            open: d.open,
+            high: d.high,
+            low: d.low,
+            close: d.close,
+        }))
+    } catch (err) {
+        console.log('getChartData fel:', err)
+        return []
+    }
+}
+
+async function getStockChartData(symbol) {
+    try {
+        const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=1mo`
+        const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
+        const data = await res.json()
+        const result = data.chart.result[0]
+        const timestamps = result.timestamp
+        const quote = result.indicators.quote[0]
+        return timestamps.map((time, i) => ({
+            time: time,
+            open: quote.open[i],
+            high: quote.high[i],
+            low: quote.low[i],
+            close: quote.close[i],
+        }))
+    } catch (err) {
+        console.log('getStockChartData fel:', err)
+        return []
+    }
+}
+
+async function loadChart(symbol, url) {
+    const onCrypto = window.location.pathname.includes('crypto.html')
+    const onStock = window.location.pathname.includes('stock.html')
+    const cryptoSymbols = ['BTC', 'ETH', 'SOL']
+    const stockSymbols = ['AAPL', 'GOOGL', 'MSFT']
+
+    if (onCrypto && cryptoSymbols.includes(symbol)) {
+        const data = await getChartData(symbol)
+        lineSeries.setData(data)
+        updateChartTitle(symbol)
+    } else if (onStock && stockSymbols.includes(symbol)) {
+        const data = await getStockChartData(symbol)
+        lineSeries.setData(data)
+        updateChartTitle(symbol)
+    } else {
+        sessionStorage.setItem('selectedSymbol', symbol)
+        window.location.href = url
+    }
+}
 
 setTimeout(async () => {
     const chartContainer = document.getElementById('chart-container')
+    if (!chartContainer) return
 
     const chart = LightweightCharts.createChart(chartContainer, {
         width: chartContainer.offsetWidth,
@@ -81,29 +145,21 @@ setTimeout(async () => {
         },
     })
 
-    lineSeries = chart.addLineSeries({ color: '#3a7bbf' })
+    lineSeries = chart.addCandlestickSeries({
+        upColor: '#0f9d58',
+        downColor: '#e63947',
+        borderUpColor: '#0f9d58',
+        borderDownColor: '#e63947',
+        wickUpColor: '#0f9d58',
+        wickDownColor: '#e63947',
+    })
 
-    const symbol = localStorage.getItem('selectedSymbol') || 'BTC'
-    localStorage.removeItem('selectedSymbol') // rensa efter användning
-    const data = await getChartData(symbol)
+    const isCrypto = window.location.pathname.includes('crypto.html')
+    const isStock = window.location.pathname.includes('stock.html')
+    const symbol = sessionStorage.getItem('selectedSymbol') || (isCrypto ? 'BTC' : isStock ? 'AAPL' : 'BTC')
+    sessionStorage.removeItem('selectedSymbol')
+    updateChartTitle(symbol)
+
+    const data = (isCrypto || (!isCrypto && !isStock)) ? await getChartData(symbol) : await getStockChartData(symbol)
     lineSeries.setData(data)
-}, 100)
-
-async function getChartData(symbol) {
-    const res = await fetch(`https://min-api.cryptocompare.com/data/v2/histoday?fsym=${symbol}&tsym=USD&limit=30`)
-    const data = await res.json()
-    return data.Data.Data.map(d => ({
-        time: d.time,
-        value: d.close
-    }))
-}
-
-async function loadChart(symbol, url) {
-    if (window.location.pathname.includes('crypto.html')) {
-        const data = await getChartData(symbol)
-        lineSeries.setData(data)
-    } else {
-        localStorage.setItem('selectedSymbol', symbol)
-        window.location.href = url
-    }
-}
+}, 500)
