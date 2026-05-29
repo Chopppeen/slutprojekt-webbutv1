@@ -1,6 +1,7 @@
 let cash = parseFloat(localStorage.getItem('cash')) || 10000
 let holdings = JSON.parse(localStorage.getItem('holdings')) || {}
 let currentPrice = 0
+let currentSymbol = 'BTC'
 let lineSeries = null
 
 function updateWallet() {
@@ -13,6 +14,8 @@ document.getElementById('buy-btn').addEventListener('click', function() {
     const total = shares * currentPrice
     if (cash >= total) {
         cash -= total
+        holdings[currentSymbol] = (holdings[currentSymbol] || 0) + shares
+        localStorage.setItem('holdings', JSON.stringify(holdings))
         updateWallet()
     } else {
         alert('Inte tillräckligt med pengar!')
@@ -21,8 +24,15 @@ document.getElementById('buy-btn').addEventListener('click', function() {
 
 document.getElementById('sell-btn').addEventListener('click', function() {
     const shares = parseFloat(document.getElementById('shares-input').value)
+    const owned = holdings[currentSymbol] || 0
+    if (shares > owned) {
+        alert(`Du äger bara ${owned} ${currentSymbol}!`)
+        return
+    }
     const total = shares * currentPrice
     cash += total
+    holdings[currentSymbol] -= shares
+    localStorage.setItem('holdings', JSON.stringify(holdings))
     updateWallet()
 })
 
@@ -61,10 +71,9 @@ async function updatePrices() {
 }
 
 function updateChartTitle(symbol) {
+    currentSymbol = symbol
     const title = document.getElementById('chart-title')
-    if (title) {
-        title.textContent = symbol
-    }
+    if (title) title.textContent = symbol
 }
 
 updatePrices()
@@ -117,10 +126,13 @@ async function loadChart(symbol, url) {
     if (onCrypto && cryptoSymbols.includes(symbol)) {
         const data = await getChartData(symbol)
         lineSeries.setData(data)
+        const prices = await getCryptoPrices()
+        currentPrice = prices[symbol]?.USD || 0
         updateChartTitle(symbol)
     } else if (onStock && stockSymbols.includes(symbol)) {
         const data = await getStockChartData(symbol)
         lineSeries.setData(data)
+        currentPrice = await getStockPrice(symbol)
         updateChartTitle(symbol)
     } else {
         sessionStorage.setItem('selectedSymbol', symbol)
@@ -156,10 +168,19 @@ setTimeout(async () => {
 
     const isCrypto = window.location.pathname.includes('crypto.html')
     const isStock = window.location.pathname.includes('stock.html')
-    const symbol = sessionStorage.getItem('selectedSymbol') || (isCrypto ? 'BTC' : isStock ? 'AAPL' : 'BTC')
+    const defaultSymbol = isStock ? 'AAPL' : 'BTC'
+    const symbol = sessionStorage.getItem('selectedSymbol') || defaultSymbol
     sessionStorage.removeItem('selectedSymbol')
-    updateChartTitle(symbol)
 
-    const data = (isCrypto || (!isCrypto && !isStock)) ? await getChartData(symbol) : await getStockChartData(symbol)
-    lineSeries.setData(data)
+    if (isStock) {
+        const data = await getStockChartData(symbol)
+        lineSeries.setData(data)
+        currentPrice = await getStockPrice(symbol)
+    } else {
+        const data = await getChartData(symbol)
+        lineSeries.setData(data)
+        const prices = await getCryptoPrices()
+        currentPrice = prices[symbol]?.USD || 0
+    }
+    updateChartTitle(symbol)
 }, 500)
