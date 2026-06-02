@@ -3,6 +3,7 @@ let holdings = JSON.parse(localStorage.getItem('holdings')) || {}
 let currentPrice = 0
 let currentSymbol = 'BTC'
 let lineSeries = null
+let currentChartData = null
 
 const assetInfo = {
     BTC: { name: "Bitcoin" },
@@ -155,6 +156,28 @@ function updateChartTitle(symbol) {
     if (titleEl && !symbolEl && !nameEl) titleEl.textContent = `${symbol} — ${assetName}`
 }
 
+function updateChartDisplay(currentPrice, chartData) {
+    const priceEl = document.getElementById('chart-price')
+    const changeEl = document.getElementById('chart-change')
+    
+    if (!chartData || chartData.length === 0) return
+    
+    const firstClose = chartData[0].close
+    const lastClose = chartData[chartData.length - 1].close
+    const percentChange = ((lastClose - firstClose) / firstClose) * 100
+    
+    if (priceEl) {
+        priceEl.textContent = '$' + currentPrice.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    }
+    
+    if (changeEl) {
+        const changeText = percentChange >= 0 ? '+' : ''
+        const changeColor = percentChange >= 0 ? '#0f9d58' : '#e63947'
+        changeEl.textContent = changeText + percentChange.toFixed(2) + '%'
+        changeEl.style.color = changeColor
+    }
+}
+
 updatePrices()
 setInterval(updatePrices, 15000)
 
@@ -205,15 +228,19 @@ async function loadChart(symbol, url) {
 
     if (onCrypto && cryptoSymbols.includes(symbol)) {
         const data = await getChartData(symbol)
+        currentChartData = data
         lineSeries.setData(data)
         const prices = await getCryptoPrices()
         currentPrice = prices[symbol]?.USD || 0
+        updateChartDisplay(currentPrice, data)
         updateChartTitle(symbol)
         startCryptoStream(symbol)
     } else if (onStock && stockSymbols.includes(symbol)) {
         const data = await getStockChartData(symbol)
+        currentChartData = data
         lineSeries.setData(data)
         currentPrice = await getStockPrice(symbol)
+        updateChartDisplay(currentPrice, data)
         updateChartTitle(symbol)
     } else {
         sessionStorage.setItem('selectedSymbol', symbol)
@@ -255,13 +282,17 @@ setTimeout(async () => {
 
     if (isStock) {
         const data = await getStockChartData(symbol)
+        currentChartData = data
         lineSeries.setData(data)
         currentPrice = await getStockPrice(symbol)
+        updateChartDisplay(currentPrice, data)
     } else {
         const data = await getChartData(symbol)
+        currentChartData = data
         lineSeries.setData(data)
         const prices = await getCryptoPrices()
         currentPrice = prices[symbol]?.USD || 0
+        updateChartDisplay(currentPrice, data)
     }
     updateChartTitle(symbol)
 }, 500)
@@ -300,6 +331,9 @@ function startCryptoStream(symbol) {
         }
 
         lineSeries.update(currentCandle)
+        
+        // Update chart display with current price and chart data percentage
+        updateChartDisplay(currentPrice, currentChartData)
     }
 }
 

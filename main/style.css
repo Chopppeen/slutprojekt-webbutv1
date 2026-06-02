@@ -14,6 +14,15 @@ body {
     color: #111;
 }
 
+a:link, a:visited {
+  color: #000000;
+  text-decoration: none;
+}
+
+a:hover, a:active {
+  color: #333333;
+}
+
 .logo {
     font-size: 34px;
     font-weight: bold;
@@ -119,6 +128,7 @@ body {
     border: 1px solid #d9e6f2;
     display: flex;
     flex-direction: row;
+    text-decoration: none;
 }
 
 .navbar nav {
