@@ -42,7 +42,10 @@
              </section>
              <div class="right-body">
                  <section class="chart">
-                    <h2 id="chart-title">Stocks</h2>
+                    <div class="chart-title">
+                        <h2 id="chart-symbol">AAPL</h2>
+                        <span id="chart-name">Apple</span>
+                    </div>
                     <div id="chart-container" style="width: 100%; height: 300px;"></div>
                     
 
@@ -50,6 +53,8 @@
                  <aside class="trade-sidebar">
                     <h2>Trade</h2>
                     <input class="value-bar" id="shares-input" type="number" min="1" value="1">
+                    <div id="trade-error" class="trade-message error"></div>
+                    <div id="trade-success" class="trade-message success"></div>
                     <button class="buy-btn" id="buy-btn">Buy</button>
                     <button class="sell-btn" id="sell-btn">Sell</button>
 

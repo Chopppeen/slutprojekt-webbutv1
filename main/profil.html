@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Profil</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="page-shell">
+        <aside class="sidebar">
+            <h2>Watchlist</h2>
+            <h3>Crypto</h3>
+            <ul>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('BTC', 'crypto.html')">BTC <span id="price-btc"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('SOL', 'crypto.html')">SOL <span id="price-sol"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('ETH', 'crypto.html')">ETH <span id="price-eth"></span></a></li>
+            </ul>
+            <h3>Stocks</h3>
+            <ul>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('AAPL', 'stock.html')">AAPL <span id="price-aapl"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('GOOGL', 'stock.html')">GOOGL <span id="price-googl"></span></a></li>
+                <li class="watchlist-item"><a href="#" onclick="loadChart('MSFT', 'stock.html')">MSFT <span id="price-msft"></span></a></li>
+            </ul>
+        </aside>
+        <div class="right-area">
+            <section class="navbar">
+                <nav>
+                    <p class="logo"><a href="index.html">Paper</a></p>
+                    <div class="nav-controls">
+                        <span id="cash">$10,000.00</span>
+                        <button class="profil-knapp" onclick="window.location='profil.html'">
+                            <img src="img/pfp-placeholder.png" alt="Profil">
+                        </button>
+                    </div>
+                </nav>
+            </section>
+            <div class="right-body">
+                <div class="profil-main">
+                    <div class="profil-card">
+                        <img class="profil-stor" src="img/pfp-placeholder.png" alt="Profil bild">
+                        <div class="profil-info">
+                            <h2 id="profil-namn">John Doe</h2>
+                            <p id="profil-epost">john.doe@example.com</p>
+                            <p class="profil-medlem">Medlem sedan 2026</p>
+                        </div>
+                    </div>
+                    <div class="historik-card">
+                        <h3>Köphistorik</h3>
+                        <table class="historik-tabell">
+                            <thead>
+                                <tr>
+                                    <th>Tillgång</th>
+                                    <th>Typ</th>
+                                    <th>Antal</th>
+                                    <th>Pris/st</th>
+                                    <th>Totalt</th>
+                                    <th>Datum</th>
+                                </tr>
+                            </thead>
+                            <tbody id="historik-body">
+                                <!---->
+                            </tbody>
+                        </table>
+                        <p id="historik-tom" class="historik-tom">Inga affärer än.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="index.js"></script>
+</body>
+</html>

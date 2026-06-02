@@ -6,8 +6,6 @@
     <title>Dashboard</title>
 
     <link rel="stylesheet" href="style.css">
-    <script src="index.js" defer></script>
-    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 
 </head>
 <body>
@@ -43,7 +41,10 @@
              </section>
              <div class="right-body">
                  <section class="chart">
-                    <h2 id="chart-title">Chart crypto</h2>
+                    <div class="chart-title">
+                        <h2 id="chart-symbol">BTC</h2>
+                        <span id="chart-name">Bitcoin</span>
+                    </div>
                     <div id="chart-container" style="width: 100%; height: 300px;"></div>
                     
 
@@ -51,6 +52,8 @@
                  <aside class="trade-sidebar">
                     <h2>Trade</h2>
                     <input class="value-bar" id="shares-input" type="number" min="1" value="1">
+                    <div id="trade-error" class="trade-message error"></div>
+                    <div id="trade-success" class="trade-message success"></div>
                     <button class="buy-btn" id="buy-btn">Buy</button>
                     <button class="sell-btn" id="sell-btn">Sell</button>
 
@@ -58,5 +61,8 @@
              </div>
          </div>
      </div>
+
+    <script src="index.js"></script>
+    <script src="https://unpkg.com/lightweight-charts@3.8.0/dist/lightweight-charts.standalone.production.js"></script>
 </body>
 </html>
