@@ -77,6 +77,7 @@ if (buyBtn) {
             history.push(trade)
             localStorage.setItem('tradeHistory', JSON.stringify(history))
             updateWallet()
+            updateHoldingsDisplay()
             showTradeSuccess(`Köpt ${shares} ${currentSymbol}`)
         } else {
             showTradeError(`Inte tillräckligt med pengar! Behövs $${total.toFixed(2)}`)
@@ -108,11 +109,13 @@ if (sellBtn) {
         history.push(trade)
         localStorage.setItem('tradeHistory', JSON.stringify(history))
         updateWallet()
+        updateHoldingsDisplay()
         showTradeSuccess(`Sålt ${shares} ${currentSymbol}`)
     })
 }
 
 updateWallet()
+updateHoldingsDisplay()
 // API-nyckel för Finnhub och cryptocompare
 const FINNHUB_KEY = 'd880de1r01qmhakhle3gd880de1r01qmhakhle40'
 
@@ -157,6 +160,15 @@ function updateChartTitle(symbol) {
     if (symbolEl) symbolEl.textContent = symbol
     if (nameEl) nameEl.textContent = assetName
     if (titleEl && !symbolEl && !nameEl) titleEl.textContent = `${symbol} — ${assetName}`
+}
+
+function updateHoldingsDisplay() {
+    const holdingsInfo = document.getElementById('holdings-info')
+    if (!holdingsInfo) return
+
+    const amount = holdings[currentSymbol] || 0
+    const formatted = Number(amount).toLocaleString('sv-SE', { minimumFractionDigits: 0, maximumFractionDigits: 4 })
+    holdingsInfo.textContent = `${formatted} ${currentSymbol}`
 }
 
 function updateChartDisplay(currentPrice, chartData) {
@@ -237,6 +249,7 @@ async function loadChart(symbol, url) {
         currentPrice = prices[symbol]?.USD || 0
         updateChartDisplay(currentPrice, data)
         updateChartTitle(symbol)
+        updateHoldingsDisplay()
         startCryptoStream(symbol)
     } else if (onStock && stockSymbols.includes(symbol)) {
         const data = await getStockChartData(symbol)
@@ -245,6 +258,7 @@ async function loadChart(symbol, url) {
         currentPrice = await getStockPrice(symbol)
         updateChartDisplay(currentPrice, data)
         updateChartTitle(symbol)
+        updateHoldingsDisplay()
     } else {
         sessionStorage.setItem('selectedSymbol', symbol)
         window.location.href = url
@@ -265,6 +279,10 @@ setTimeout(async () => {
         grid: {
             vertLines: { color: '#d9e6f2' },
             horzLines: { color: '#d9e6f2' },
+        },
+        timeScale: {
+            timeVisible: true,
+            secondsVisible: false,
         },
     })
 
@@ -672,4 +690,3 @@ function updateProfileButton() {
 }
 
 updateProfileButton()
-

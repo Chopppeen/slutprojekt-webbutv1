@@ -250,6 +250,18 @@ a:hover, a:active {
     border-color: #0b7c45;
 }
 
+.holdings-info {
+    padding: 12px 14px;
+    border-radius: 12px;
+    background: #f8fafc;
+    border: 1px solid #dbe8f6;
+    color: #0f172a;
+    font-size: 0.95rem;
+    font-weight: 700;
+    text-align: center;
+    margin-top: 4px;
+}
+
 .sell-btn {
     background: #e63947a2;
     color: #ffffff;
