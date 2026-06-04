@@ -5,6 +5,8 @@ let currentSymbol = 'BTC'
 let lineSeries = null
 let currentChartData = null
 
+
+// Namn för varje symbol
 const assetInfo = {
     BTC: { name: "Bitcoin" },
     ETH: { name: "Ethereum" },
@@ -15,7 +17,8 @@ const assetInfo = {
 }
 
 function updateWallet() {
-    document.getElementById('cash').textContent = '$' + cash.toFixed(2)
+    const el = document.getElementById('cash')
+    if (el) el.textContent = '$' + cash.toFixed(2)
     localStorage.setItem('cash', cash)
 }
 
@@ -53,7 +56,7 @@ function validateTradeInput(shares) {
 
 const buyBtn = document.getElementById('buy-btn')
 const sellBtn = document.getElementById('sell-btn')
-
+// köp / sälj logik
 if (buyBtn) {
     buyBtn.addEventListener('click', function() {
         const shares = parseFloat(document.getElementById('shares-input').value)
@@ -110,7 +113,7 @@ if (sellBtn) {
 }
 
 updateWallet()
-
+// API-nyckel för Finnhub och cryptocompare
 const FINNHUB_KEY = 'd880de1r01qmhakhle3gd880de1r01qmhakhle40'
 
 async function getStockPrice(symbol) {
@@ -142,7 +145,7 @@ async function updatePrices() {
         console.log('updatePrices fel:', err)
     }
 }
-
+// Chart namn och symbol
 function updateChartTitle(symbol) {
     currentSymbol = symbol
 
@@ -180,7 +183,7 @@ function updateChartDisplay(currentPrice, chartData) {
 
 updatePrices()
 setInterval(updatePrices, 15000)
-
+// Chart data
 async function getChartData(symbol) {
     try {
         const res = await fetch(`https://min-api.cryptocompare.com/data/v2/histominute?fsym=${symbol}&tsym=USD&limit=1440`)
@@ -332,11 +335,10 @@ function startCryptoStream(symbol) {
 
         lineSeries.update(currentCandle)
         
-        // Update chart display with current price and chart data percentage
         updateChartDisplay(currentPrice, currentChartData)
     }
 }
-
+// handels historik
 const tbody = document.getElementById('historik-body')
 if (tbody) {
     const cash = parseFloat(localStorage.getItem('cash')) || 10000
@@ -363,3 +365,261 @@ if (tbody) {
         })
     }
 }
+
+// register/login logic
+const authPages = {
+    login: window.location.pathname.includes('login.html'),
+    register: window.location.pathname.includes('register.html'),
+    profile: window.location.pathname.includes('profil.html'),
+    protected: ['index.html', 'crypto.html', 'stock.html', 'profil.html']
+        .some(page => window.location.pathname.includes(page))
+}
+
+function getStoredUsers() {
+    return JSON.parse(localStorage.getItem('users') || '[]')
+}
+
+function saveStoredUsers(users) {
+    localStorage.setItem('users', JSON.stringify(users))
+}
+
+function getCurrentUser() {
+    return JSON.parse(localStorage.getItem('currentUser') || 'null')
+}
+
+function setCurrentUser(user) {
+    localStorage.setItem('currentUser', JSON.stringify(user))
+}
+
+function clearCurrentUser() {
+    localStorage.removeItem('currentUser')
+}
+
+function isValidEmail(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function isValidPassword(password) {
+    return typeof password === 'string' && password.length >= 6
+}
+
+function showAuthMessage(el, message, type = 'error') {
+    if (!el) return
+    el.textContent = message
+    el.classList.remove('error', 'success', 'show')
+    el.classList.add(type, 'show')
+}
+
+function redirectToDashboard() {
+    window.location.href = 'index.html'
+}
+
+function handleRegisterPage() {
+    if (!authPages.register) return
+    const nameInput = document.getElementById('reg-namn')
+    const emailInput = document.getElementById('reg-email')
+    const passwordInput = document.getElementById('reg-password')
+    const errorEl = document.getElementById('reg-error')
+    const successEl = document.getElementById('reg-success')
+    const button = document.getElementById('reg-btn')
+
+    if (getCurrentUser()) {
+        redirectToDashboard()
+        return
+    }
+
+    if (!button || !nameInput || !emailInput || !passwordInput) return
+
+    button.addEventListener('click', function (event) {
+        event.preventDefault()
+        const name = nameInput.value.trim()
+        const email = emailInput.value.trim().toLowerCase()
+        const password = passwordInput.value
+
+        if (!name || name.length < 2) {
+            showAuthMessage(errorEl, 'Ange ditt namn med minst 2 tecken.', 'error')
+            return
+        }
+        if (!isValidEmail(email)) {
+            showAuthMessage(errorEl, 'Ange en giltig e-postadress.', 'error')
+            return
+        }
+        if (!isValidPassword(password)) {
+            showAuthMessage(errorEl, 'Lösenordet måste vara minst 6 tecken långt.', 'error')
+            return
+        }
+
+        const users = getStoredUsers()
+        if (users.some(user => user.email === email)) {
+            showAuthMessage(errorEl, 'E-postadressen är redan registrerad.', 'error')
+            return
+        }
+
+        const user = {
+            name,
+            email,
+            password,
+            createdAt: new Date().toISOString()
+        }
+
+        users.push(user)
+        saveStoredUsers(users)
+        setCurrentUser(user)
+        showAuthMessage(successEl, 'Konto skapat! Du loggas in...', 'success')
+        setTimeout(redirectToDashboard, 1200)
+    })
+}
+
+function handleLoginPage() {
+    if (!authPages.login) return
+    const emailInput = document.getElementById('login-email')
+    const passwordInput = document.getElementById('login-password')
+    const errorEl = document.getElementById('login-error')
+    const button = document.getElementById('login-btn')
+
+    if (getCurrentUser()) {
+        redirectToDashboard()
+        return
+    }
+
+    if (!button || !emailInput || !passwordInput) return
+
+    button.addEventListener('click', function (event) {
+        event.preventDefault()
+        const email = emailInput.value.trim().toLowerCase()
+        const password = passwordInput.value
+
+        if (!isValidEmail(email)) {
+            showAuthMessage(errorEl, 'Ange en giltig e-postadress.', 'error')
+            return
+        }
+        if (!password) {
+            showAuthMessage(errorEl, 'Ange ditt lösenord.', 'error')
+            return
+        }
+
+        const users = getStoredUsers()
+        let user = users.find(u => u.email === email)
+
+        // Fallback: stöd för äldre sparad nyckel 'user' (tidigare versioner)
+        if (!user) {
+            const legacy = JSON.parse(localStorage.getItem('user') || 'null')
+            if (legacy && (legacy.email === email || legacy.namn === email) && legacy.password === password) {
+                
+                const migrated = {
+                    name: legacy.name || legacy.namn || 'Användare',
+                    email: legacy.email || (legacy.namn ? legacy.namn : ''),
+                    password: legacy.password,
+                    createdAt: new Date().toISOString()
+                }
+                users.push(migrated)
+                saveStoredUsers(users)
+                user = migrated
+            }
+        }
+
+        if (!user || user.password !== password) {
+            showAuthMessage(errorEl, 'Fel e-post eller lösenord.', 'error')
+            return
+        }
+
+        setCurrentUser(user)
+        showAuthMessage(errorEl, 'Inloggning lyckades!', 'success')
+        setTimeout(redirectToDashboard, 900)
+    })
+}
+
+function protectPages() {
+    if (authPages.login || authPages.register) return
+    if (!authPages.protected) return
+    if (!getCurrentUser()) {
+        window.location.href = 'login.html'
+    }
+}
+
+function renderProfilePage() {
+    if (!authPages.profile) return
+    const user = getCurrentUser()
+    if (!user) {
+        window.location.href = 'login.html'
+        return
+    }
+
+    const nameEl = document.getElementById('profil-namn')
+    const emailEl = document.getElementById('profil-epost')
+    const memberEl = document.getElementById('profil-medlem')
+    const logoutBtn = document.getElementById('logout-btn')
+    const historyBody = document.getElementById('historik-body')
+    const historyEmpty = document.getElementById('historik-tom')
+
+    if (nameEl) nameEl.textContent = user.name
+    if (emailEl) emailEl.textContent = user.email
+    if (memberEl) {
+        const date = new Date(user.createdAt)
+        memberEl.textContent = `Medlem sedan ${date.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}`
+    }
+
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', function () {
+            clearCurrentUser()
+            window.location.href = 'login.html'
+        })
+    }
+
+    if (!historyBody || !historyEmpty) return
+    const history = JSON.parse(localStorage.getItem('tradeHistory') || '[]')
+    if (!history.length) {
+        historyBody.innerHTML = ''
+        historyEmpty.style.display = 'block'
+        return
+    }
+
+    historyEmpty.style.display = 'none'
+    historyBody.innerHTML = ''
+    history.slice().reverse().forEach(item => {
+        const row = document.createElement('tr')
+        row.innerHTML = `
+            <td>${item.symbol}</td>
+            <td style="color: ${item.type === 'köpt' ? '#16a34a' : '#dc2626'}; font-weight: 600">${item.type}</td>
+            <td>${item.shares}</td>
+            <td>$${item.price.toFixed(2)}</td>
+            <td>$${item.total.toFixed(2)}</td>
+            <td>${item.date}</td>
+        `
+        historyBody.appendChild(row)
+    })
+}
+
+handleRegisterPage()
+handleLoginPage()
+protectPages()
+renderProfilePage()
+
+// profilknapp i navbar
+function getUserInitials(user) {
+    if (!user || !user.name) return 'U'
+    return user.name
+        .split(' ')
+        .filter(Boolean)
+        .map(part => part[0].toUpperCase())
+        .slice(0, 2)
+        .join('')
+}
+
+function updateProfileButton() {
+    const profilKnapp = document.querySelector('.profil-knapp')
+    if (!profilKnapp) return
+
+    const user = getCurrentUser()
+    if (user) {
+        const initials = getUserInitials(user)
+        profilKnapp.innerHTML = `<span class="profile-badge">${initials}</span>`
+        profilKnapp.onclick = () => window.location.href = 'profil.html'
+    } else {
+        profilKnapp.innerHTML = `<span class="login-text">Logga in</span>`
+        profilKnapp.onclick = () => window.location.href = 'login.html'
+    }
+}
+
+updateProfileButton()
+

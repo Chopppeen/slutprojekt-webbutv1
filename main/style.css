@@ -280,6 +280,21 @@ a:hover, a:active {
     cursor: pointer;
 }
 
+.profile-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    background: #0f9d58;
+    color: white;
+    font-weight: 700;
+    font-size: 0.95rem;
+    border: 1px solid rgba(0, 0, 0, 0.15);
+    cursor: pointer;
+}
+
 #chart-container {
     flex: 1;
     min-height: 0;
@@ -428,4 +443,81 @@ a:hover, a:active {
     color: #94a3b8;
     font-size: 0.9rem;
     padding: 16px 12px;
+}
+
+.auth-page {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    background: #f0f4f8;
+}
+
+.auth-card {
+    background: aliceblue;
+    border: 1px solid #d9e6f2;
+    border-radius: 16px;
+    padding: 40px;
+    width: 100%;
+    max-width: 400px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.auth-card .logo {
+    font-size: 28px;
+    text-align: center;
+}
+
+.auth-card h2 {
+    font-size: 1.1rem;
+    color: #1e293b;
+    text-align: center;
+}
+
+.auth-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.auth-link {
+    font-size: 0.85rem;
+    color: #64748b;
+    text-align: center;
+}
+
+.auth-link a {
+    color: #3a7bbf;
+    text-decoration: none;
+}
+
+.auth-link a:hover {
+    text-decoration: underline;
+}
+
+.logout-btn {
+    margin-top: 12px;
+    width: fit-content;
+    min-height: 44px;
+    padding: 12px 20px;
+    border-radius: 12px;
+    border: 1px solid transparent;
+    background: #e2e8f0;
+    color: #111827;
+    font-weight: 700;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.15s ease;
+}
+
+.logout-btn:hover {
+    background: #cbd5e1;
+}
+
+.login-text {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1e293b;
+    white-space: nowrap;
 }
