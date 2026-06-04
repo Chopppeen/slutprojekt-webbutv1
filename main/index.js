@@ -559,6 +559,9 @@ function renderProfilePage() {
         memberEl.textContent = `Medlem sedan ${date.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}`
     }
 
+    updateProfileImageDisplay(user)
+    attachProfileImageUpload()
+
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
             clearCurrentUser()
@@ -590,6 +593,49 @@ function renderProfilePage() {
     })
 }
 
+//profilbild Byte
+function updateProfileImageDisplay(user) {
+    const avatar = document.getElementById('profil-avatar')
+    if (!avatar) return
+    avatar.src = user.image || 'img/pfp-placeholder.png'
+    avatar.alt = `${user.name}'s profilbild`
+}
+
+function attachProfileImageUpload() {
+    const input = document.getElementById('profil-image-input')
+    if (!input) return
+
+    input.addEventListener('change', function () {
+        const file = input.files?.[0]
+        if (!file) return
+        if (!file.type.startsWith('image/')) return
+        if (file.size > 5 * 1024 * 1024) {
+            alert('Vänligen välj en bild som är mindre än 5 MB.')
+            return
+        }
+
+        const reader = new FileReader()
+        reader.onload = function (event) {
+            const imageData = event.target.result
+            const user = getCurrentUser()
+            if (!user) return
+            user.image = imageData
+            setCurrentUser(user)
+
+            const users = getStoredUsers()
+            const index = users.findIndex(u => u.email === user.email)
+            if (index !== -1) {
+                users[index].image = imageData
+                saveStoredUsers(users)
+            }
+
+            updateProfileImageDisplay(user)
+            updateProfileButton()
+        }
+        reader.readAsDataURL(file)
+    })
+}
+
 handleRegisterPage()
 handleLoginPage()
 protectPages()
@@ -612,8 +658,12 @@ function updateProfileButton() {
 
     const user = getCurrentUser()
     if (user) {
-        const initials = getUserInitials(user)
-        profilKnapp.innerHTML = `<span class="profile-badge">${initials}</span>`
+        if (user.image) {
+            profilKnapp.innerHTML = `<img src="${user.image}" alt="Profilbild">`
+        } else {
+            const initials = getUserInitials(user)
+            profilKnapp.innerHTML = `<span class="profile-badge">${initials}</span>`
+        }
         profilKnapp.onclick = () => window.location.href = 'profil.html'
     } else {
         profilKnapp.innerHTML = `<span class="login-text">Logga in</span>`
