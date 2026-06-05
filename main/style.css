@@ -281,6 +281,7 @@ a:hover, a:active {
     border: none;
     background: transparent;
     padding: 0;
+    cursor: pointer;
 }
 
 .profil-knapp img {
@@ -578,4 +579,94 @@ a:hover, a:active {
     font-weight: 600;
     color: #1e293b;
     white-space: nowrap;
+}
+
+@media (max-width: 900px) {
+    html, body { overflow: auto; }
+
+    .page-shell {
+        flex-direction: column;
+        height: auto;
+        margin: 10px;
+        gap: 12px;
+    }
+
+    .sidebar {
+        width: 100%;
+        padding: 14px;
+        border-radius: 10px;
+        order: 2;
+        display: flex;
+        flex-direction: column;
+    }
+
+    .right-area {
+        width: 100%;
+        display: contents;
+    }
+
+    .navbar {
+        padding: 12px;
+        border-radius: 10px;
+        order: 1;
+        width: 100%;
+        display: flex;
+    }
+
+    .right-body {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        order: 3;
+        width: 100%;
+    }
+
+    .trade-sidebar {
+        width: 100%;
+        padding: 16px;
+        border-radius: 10px;
+        order: 2;
+    }
+
+    .chart {
+        order: 1;
+        width: 100%;
+        padding: 16px;
+        border-radius: 12px;
+        box-shadow: 0 10px 22px rgba(15,23,42,0.05);
+    }
+
+    #chart-container {
+        height: 300px;
+    }
+
+    .profil-knapp, .profile-badge {
+        width: 40px;
+        height: 40px;
+    }
+
+    .buy-btn, .sell-btn { min-height: 48px; }
+
+    .logo { font-size: 26px; }
+
+    .sidebar h2 { font-size: 1rem; }
+    .chart h2 { font-size: 1rem; }
+
+    .watchlist-item a { padding: 10px 12px; }
+
+    .profil-card { padding: 16px; gap: 12px; }
+
+    .historik-card { padding: 16px; }
+
+}
+
+@media (max-width: 480px) {
+    .logo { font-size: 22px; }
+    .navbar { padding: 10px; }
+    .chart { padding: 12px; }
+    #chart-container { height: 260px; }
+    .sidebar, .trade-sidebar { padding: 12px; }
+    .watchlist-item span { min-width: 48px; font-size: 0.75rem; }
+    .historik-tabell td, .historik-tabell th { padding: 8px 6px; font-size: 0.85rem; }
+    .auth-card { padding: 28px; max-width: 360px; }
 }

@@ -1,12 +1,13 @@
+// Appens tillstånd (sparas i localStorage mellan sidladdningar)
 let cash = parseFloat(localStorage.getItem('cash')) || 10000
 let holdings = JSON.parse(localStorage.getItem('holdings')) || {}
 let currentPrice = 0
-let currentSymbol = 'BTC'
-let lineSeries = null
-let currentChartData = null
+let currentSymbol = 'BTC' // vilken symbol som visas/handlas just nu
+let lineSeries = null // chart-serie (LightweightCharts)
+let currentChartData = null // cache för chart-data
 
 
-// Namn för varje symbol
+// Namn för varje symbol (visningsnamn)
 const assetInfo = {
     BTC: { name: "Bitcoin" },
     ETH: { name: "Ethereum" },
@@ -16,13 +17,18 @@ const assetInfo = {
     MSFT: { name: "Microsoft" }
 }
 
+// DOM-element som används för trading
+// - `buy-btn` och `sell-btn`: knappar för köp/sälj
+// - `shares-input`: inputfält där användaren anger antal enheter att handla
 function updateWallet() {
+    // Uppdatera plånboksvisning och spara nytt saldo
     const el = document.getElementById('cash')
     if (el) el.textContent = '$' + cash.toFixed(2)
     localStorage.setItem('cash', cash)
 }
 
 function showTradeError(message) {
+    // Visa felmeddelande vid misslyckad handel
     const errorEl = document.getElementById('trade-error')
     const successEl = document.getElementById('trade-success')
     if (successEl) {
@@ -36,6 +42,7 @@ function showTradeError(message) {
 }
 
 function showTradeSuccess(message) {
+    // Visa bekräftelse vid lyckad handel
     const successEl = document.getElementById('trade-success')
     const errorEl = document.getElementById('trade-error')
     if (errorEl) {
@@ -49,6 +56,7 @@ function showTradeSuccess(message) {
 }
 
 function validateTradeInput(shares) {
+    // Enkel validering av användarens inskrivna antal
     if (!shares || isNaN(shares)) return 'Ange ett giltigt antal'
     if (shares <= 0) return 'Antal måste vara större än 0'
     return null
@@ -56,7 +64,7 @@ function validateTradeInput(shares) {
 
 const buyBtn = document.getElementById('buy-btn')
 const sellBtn = document.getElementById('sell-btn')
-// köp / sälj logik
+// Köp / sälj-logik: hanterar knappklick för att skapa trades
 if (buyBtn) {
     buyBtn.addEventListener('click', function() {
         const shares = parseFloat(document.getElementById('shares-input').value)
@@ -114,20 +122,26 @@ if (sellBtn) {
     })
 }
 
+// Initial render av plånbok och innehav
 updateWallet()
 updateHoldingsDisplay()
-// API-nyckel för Finnhub och cryptocompare
+// API-nycklar / externa tjänster
+// OBS: i produktion bör nycklar inte ligga i direkt kod
 const FINNHUB_KEY = 'd880de1r01qmhakhle3gd880de1r01qmhakhle40'
 
 async function getStockPrice(symbol) {
     const res = await fetch(`https://finnhub.io/api/v1/quote?symbol=${symbol}&token=${FINNHUB_KEY}`)
     const data = await res.json()
+    // getStockPrice: returnerar aktuell sista trades-pris från Finnhub
+    // `symbol` som t.ex. 'AAPL'. Returnerar ett nummer (pris i USD).
     return data.c
 }
 
 async function getCryptoPrices() {
     const res = await fetch('https://min-api.cryptocompare.com/data/pricemulti?fsyms=BTC,ETH,SOL&tsyms=USD')
     const data = await res.json()
+    // getCryptoPrices: hämtar flera kryptopris på en gång och returnerar ett objekt
+    // med formatet { BTC: { USD: 12345.67 }, ETH: { USD: ... }, SOL: { USD: ... } }
     return data
 }
 
@@ -148,7 +162,8 @@ async function updatePrices() {
         console.log('updatePrices fel:', err)
     }
 }
-// Chart namn och symbol
+
+// Uppdatera rubrik/etiketter för diagrammet när symbol ändras
 function updateChartTitle(symbol) {
     currentSymbol = symbol
 
@@ -193,6 +208,7 @@ function updateChartDisplay(currentPrice, chartData) {
     }
 }
 
+// Starta prisuppdatering i bakgrunden
 updatePrices()
 setInterval(updatePrices, 15000)
 // Chart data
@@ -318,6 +334,7 @@ setTimeout(async () => {
     updateChartTitle(symbol)
 }, 500)
 
+// WebSocket för realtidspris (Binance)
 let ws = null
 let currentCandle = null
 
@@ -356,7 +373,7 @@ function startCryptoStream(symbol) {
         updateChartDisplay(currentPrice, currentChartData)
     }
 }
-// handels historik
+// Bygg tabell med handels-historik från localStorage
 const tbody = document.getElementById('historik-body')
 if (tbody) {
     const cash = parseFloat(localStorage.getItem('cash')) || 10000
@@ -384,7 +401,7 @@ if (tbody) {
     }
 }
 
-// register/login logic
+// Register / login - enkel klientbaserad autentisering (localStorage)
 const authPages = {
     login: window.location.pathname.includes('login.html'),
     register: window.location.pathname.includes('register.html'),
@@ -397,6 +414,9 @@ function getStoredUsers() {
     return JSON.parse(localStorage.getItem('users') || '[]')
 }
 
+// `users` lagras i localStorage som en array av objekt:
+// [{ name, email, password, createdAt, image? }, ...]
+
 function saveStoredUsers(users) {
     localStorage.setItem('users', JSON.stringify(users))
 }
@@ -404,6 +424,9 @@ function saveStoredUsers(users) {
 function getCurrentUser() {
     return JSON.parse(localStorage.getItem('currentUser') || 'null')
 }
+
+// `currentUser` är en enkel sessionsmarkör sparad i localStorage.
+// Den innehåller hela användarobjektet (inkl. namn, epost, ev. profilbild).
 
 function setCurrentUser(user) {
     localStorage.setItem('currentUser', JSON.stringify(user))
@@ -563,6 +586,14 @@ function renderProfilePage() {
         return
     }
 
+    // renderProfilePage fyller profilvyn med användarens data.
+    // Förväntade element på sidan:
+    // - `profil-namn`: element där användarens visningsnamn visas
+    // - `profil-epost`: e-postadress
+    // - `profil-medlem`: medlemsdatum
+    // - `profil-avatar`: bild (uppdateras av updateProfileImageDisplay)
+    // - `profil-image-input`: input för att ladda upp ny bild
+    // - `historik-body`, `historik-tom`: handels-historik
     const nameEl = document.getElementById('profil-namn')
     const emailEl = document.getElementById('profil-epost')
     const memberEl = document.getElementById('profil-medlem')
@@ -619,6 +650,9 @@ function updateProfileImageDisplay(user) {
     avatar.alt = `${user.name}'s profilbild`
 }
 
+// updateProfileImageDisplay: sätter `src` på profilbildselementet.
+// Bilden kommer från `user.image` och kan vara en data-URL (base64).
+
 function attachProfileImageUpload() {
     const input = document.getElementById('profil-image-input')
     if (!input) return
@@ -654,6 +688,9 @@ function attachProfileImageUpload() {
     })
 }
 
+// attachProfileImageUpload: läser vald fil som data-URL och sparar den
+// i både `currentUser` och i `users`-listan. Begränsar filstorlek till 5 MB.
+
 handleRegisterPage()
 handleLoginPage()
 protectPages()
@@ -669,6 +706,8 @@ function getUserInitials(user) {
         .slice(0, 2)
         .join('')
 }
+
+// getUserInitials: bygger initialer (max 2 bokstäver) för att visa i navbar
 
 function updateProfileButton() {
     const profilKnapp = document.querySelector('.profil-knapp')
@@ -689,4 +728,10 @@ function updateProfileButton() {
     }
 }
 
+// updateProfileButton: uppdaterar profilknappen i navbaren.
+// Visar profilbild om användaren har en, annars initialer. Knappen navigerar
+// till `profil.html` om inloggad, eller `login.html` annars.
+
 updateProfileButton()
+
+// Körs på sidladdning för att initiera profil-knappens utseende/beteende
