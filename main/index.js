@@ -62,6 +62,16 @@ function validateTradeInput(shares) {
     return null
 }
 
+function formatTradeDate(value) {
+    // Tar antingen en Date objekt eller en datumsträng, och formaterar till kort format
+    const date = value instanceof Date ? value : new Date(value)
+    if (isNaN(date)) return value
+    const day = String(date.getDate()).padStart(2, '0')
+    const month = String(date.getMonth() + 1).padStart(2, '0')
+    const year = String(date.getFullYear()).slice(-2)
+    return `${day}/${month}-${year}`
+}
+
 const buyBtn = document.getElementById('buy-btn')
 const sellBtn = document.getElementById('sell-btn')
 // Köp / sälj-logik: hanterar knappklick för att skapa trades
@@ -79,7 +89,7 @@ if (buyBtn) {
                 price: currentPrice,
                 total: total,
                 type: 'köpt',
-                date: new Date().toLocaleDateString('sv-SE')
+                date: formatTradeDate(new Date()) // Sparar datum i kort format
             }
             const history = JSON.parse(localStorage.getItem('tradeHistory')) || []
             history.push(trade)
@@ -111,7 +121,7 @@ if (sellBtn) {
             price: currentPrice,
             total: total,
             type: 'sålt',
-            date: new Date().toLocaleDateString('sv-SE')
+            date: formatTradeDate(new Date()) // Sparar datum i kort format
         }
         const history = JSON.parse(localStorage.getItem('tradeHistory')) || []
         history.push(trade)
@@ -636,7 +646,7 @@ function renderProfilePage() {
             <td>${item.shares}</td>
             <td>$${item.price.toFixed(2)}</td>
             <td>$${item.total.toFixed(2)}</td>
-            <td>${item.date}</td>
+            <td>${formatTradeDate(item.date)}</td>
         `
         historyBody.appendChild(row)
     })
