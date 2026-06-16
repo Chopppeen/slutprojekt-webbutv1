@@ -63,7 +63,7 @@ function validateTradeInput(shares) {
 }
 
 function formatTradeDate(value) {
-    // Tar antingen en Date objekt eller en datumsträng, och formaterar till kort format
+    // Tar antingen en Date  objekt eller en datumsträng, och formaterar till kort format
     const date = value instanceof Date ? value : new Date(value)
     if (isNaN(date)) return value
     const day = String(date.getDate()).padStart(2, '0')
@@ -243,6 +243,8 @@ async function getChartData(symbol) {
 async function getStockChartData(symbol) {
     try {
         const url = `https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?interval=1d&range=12mo`
+
+        //överväger att ta bort corsproxy eftersom det är överkurs men eftersom Yahoo finance blockerar anropen direkt från klienten så låter jag det vara kvar så länge det funkar.
         const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(url)}`)
         const data = await res.json()
         const result = data.chart.result[0]
@@ -276,7 +278,6 @@ async function loadChart(symbol, url) {
         updateChartDisplay(currentPrice, data)
         updateChartTitle(symbol)
         updateHoldingsDisplay()
-        startCryptoStream(symbol)
     } else if (onStock && stockSymbols.includes(symbol)) {
         const data = await getStockChartData(symbol)
         currentChartData = data
@@ -344,45 +345,8 @@ setTimeout(async () => {
     updateChartTitle(symbol)
 }, 500)
 
-// WebSocket för realtidspris (Binance)
-let ws = null
-let currentCandle = null
+//tog bort websockets eftersom jag kan nöja med priserna updateras varje 15sekunder som finnhub redan gjorde vilket jag hade missat tidigare.
 
-function startCryptoStream(symbol) {
-    if (ws) ws.close()
-
-    ws = new WebSocket(
-        `wss://stream.binance.com:9443/ws/${symbol.toLowerCase()}usdt@trade`
-    )
-
-    ws.onmessage = (event) => {
-        const trade = JSON.parse(event.data)
-
-        const price = parseFloat(trade.p)
-        currentPrice = price
-
-        const now = Math.floor(Date.now() / 1000)
-        const candleTime = now - (now % 60)
-
-        if (!currentCandle || currentCandle.time !== candleTime) {
-            currentCandle = {
-                time: candleTime,
-                open: price,
-                high: price,
-                low: price,
-                close: price
-            }
-        } else {
-            currentCandle.high = Math.max(currentCandle.high, price)
-            currentCandle.low = Math.min(currentCandle.low, price)
-            currentCandle.close = price
-        }
-
-        lineSeries.update(currentCandle)
-        
-        updateChartDisplay(currentPrice, currentChartData)
-    }
-}
 // Bygg tabell med handels-historik från localStorage
 const tbody = document.getElementById('historik-body')
 if (tbody) {
@@ -472,16 +436,16 @@ function handleRegisterPage() {
     const passwordInput = document.getElementById('reg-password')
     const errorEl = document.getElementById('reg-error')
     const successEl = document.getElementById('reg-success')
-    const button = document.getElementById('reg-btn')
+    const form = document.getElementById('reg-form')
 
     if (getCurrentUser()) {
         redirectToDashboard()
         return
     }
 
-    if (!button || !nameInput || !emailInput || !passwordInput) return
+    if (!form || !nameInput || !emailInput || !passwordInput) return
 
-    button.addEventListener('click', function (event) {
+    form.addEventListener('submit', function (event) {
         event.preventDefault()
         const name = nameInput.value.trim()
         const email = emailInput.value.trim().toLowerCase()
@@ -552,7 +516,7 @@ function handleLoginPage() {
         const users = getStoredUsers()
         let user = users.find(u => u.email === email)
 
-        // Fallback: stöd för äldre sparad nyckel 'user' (tidigare versioner)
+        // Fallback: stöd för äldre sparad nyckel 'user' (tidigare versioner) / känns överkurs men låter det vara kvar...
         if (!user) {
             const legacy = JSON.parse(localStorage.getItem('user') || 'null')
             if (legacy && (legacy.email === email || legacy.namn === email) && legacy.password === password) {
@@ -596,14 +560,6 @@ function renderProfilePage() {
         return
     }
 
-    // renderProfilePage fyller profilvyn med användarens data.
-    // Förväntade element på sidan:
-    // - `profil-namn`: element där användarens visningsnamn visas
-    // - `profil-epost`: e-postadress
-    // - `profil-medlem`: medlemsdatum
-    // - `profil-avatar`: bild (uppdateras av updateProfileImageDisplay)
-    // - `profil-image-input`: input för att ladda upp ny bild
-    // - `historik-body`, `historik-tom`: handels-historik
     const nameEl = document.getElementById('profil-namn')
     const emailEl = document.getElementById('profil-epost')
     const memberEl = document.getElementById('profil-medlem')
@@ -617,9 +573,6 @@ function renderProfilePage() {
         const date = new Date(user.createdAt)
         memberEl.textContent = `Medlem sedan ${date.toLocaleDateString('sv-SE', { month: 'long', year: 'numeric' })}`
     }
-
-    updateProfileImageDisplay(user)
-    attachProfileImageUpload()
 
     if (logoutBtn) {
         logoutBtn.addEventListener('click', function () {
@@ -652,96 +605,8 @@ function renderProfilePage() {
     })
 }
 
-//profilbild Byte
-function updateProfileImageDisplay(user) {
-    const avatar = document.getElementById('profil-avatar')
-    if (!avatar) return
-    avatar.src = user.image || 'img/pfp-placeholder.png'
-    avatar.alt = `${user.name}'s profilbild`
-}
-
-// updateProfileImageDisplay: sätter `src` på profilbildselementet.
-// Bilden kommer från `user.image` och kan vara en data-URL (base64).
-
-function attachProfileImageUpload() {
-    const input = document.getElementById('profil-image-input')
-    if (!input) return
-
-    input.addEventListener('change', function () {
-        const file = input.files?.[0]
-        if (!file) return
-        if (!file.type.startsWith('image/')) return
-        if (file.size > 5 * 1024 * 1024) {
-            alert('Vänligen välj en bild som är mindre än 5 MB.')
-            return
-        }
-
-        const reader = new FileReader()
-        reader.onload = function (event) {
-            const imageData = event.target.result
-            const user = getCurrentUser()
-            if (!user) return
-            user.image = imageData
-            setCurrentUser(user)
-
-            const users = getStoredUsers()
-            const index = users.findIndex(u => u.email === user.email)
-            if (index !== -1) {
-                users[index].image = imageData
-                saveStoredUsers(users)
-            }
-
-            updateProfileImageDisplay(user)
-            updateProfileButton()
-        }
-        reader.readAsDataURL(file)
-    })
-}
-
-// attachProfileImageUpload: läser vald fil som data-URL och sparar den
-// i både `currentUser` och i `users`-listan. Begränsar filstorlek till 5 MB.
-
+// Kör alla nödvändiga sid-initieringar så att funktionerna faktiskt startar
+protectPages()
 handleRegisterPage()
 handleLoginPage()
-protectPages()
 renderProfilePage()
-
-// profilknapp i navbar
-function getUserInitials(user) {
-    if (!user || !user.name) return 'U'
-    return user.name
-        .split(' ')
-        .filter(Boolean)
-        .map(part => part[0].toUpperCase())
-        .slice(0, 2)
-        .join('')
-}
-
-// getUserInitials: bygger initialer (max 2 bokstäver) för att visa i navbar
-
-function updateProfileButton() {
-    const profilKnapp = document.querySelector('.profil-knapp')
-    if (!profilKnapp) return
-
-    const user = getCurrentUser()
-    if (user) {
-        if (user.image) {
-            profilKnapp.innerHTML = `<img src="${user.image}" alt="Profilbild">`
-        } else {
-            const initials = getUserInitials(user)
-            profilKnapp.innerHTML = `<span class="profile-badge">${initials}</span>`
-        }
-        profilKnapp.onclick = () => window.location.href = 'profil.html'
-    } else {
-        profilKnapp.innerHTML = `<span class="login-text">Logga in</span>`
-        profilKnapp.onclick = () => window.location.href = 'login.html'
-    }
-}
-
-// updateProfileButton: uppdaterar profilknappen i navbaren.
-// Visar profilbild om användaren har en, annars initialer. Knappen navigerar
-// till `profil.html` om inloggad, eller `login.html` annars.
-
-updateProfileButton()
-
-// Körs på sidladdning för att initiera profil-knappens utseende/beteende

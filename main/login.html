@@ -11,13 +11,21 @@
         <p class="logo">Paper</p>
         <h2>Logga in</h2>
 
-        <div class="auth-form">
-            <input class="value-bar" id="login-email" type="email" placeholder="Email">
-            <input class="value-bar" id="login-password" type="password" placeholder="Lösenord">
+        <form class="auth-form">
+            <div class="form-field">
+                <label for="login-email">Email</label>
+                <input class="value-bar" id="login-email" type="email" placeholder="Email">
+            </div>
+
+            <div class="form-field">
+                <label for="login-password">Lösenord</label>
+                <input class="value-bar" id="login-password" type="password" placeholder="Lösenord">
+            </div>
+
             <div id="login-error" class="trade-message error"></div>
-            <button class="buy-btn" id="login-btn">Logga in</button>
+            <button class="buy-btn" id="login-btn" type="submit">Logga in</button>
             <p class="auth-link">Inget konto? <a href="register.html">Registrera dig</a></p>
-        </div>
+        </form>
     </div>
 
     <script src="index.js"></script>

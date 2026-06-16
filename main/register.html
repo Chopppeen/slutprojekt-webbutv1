@@ -11,15 +11,21 @@
         <p class="logo">Paper</p>
         <h2>Skapa konto</h2>
 
-        <div class="auth-form">
+        <form class="auth-form" id="reg-form">
+            <label class="login-label" for="reg-namn">Namn</label>
             <input class="value-bar" id="reg-namn" type="text" placeholder="Namn">
+
+            <label class="login-label" for="reg-email">Email</label>
             <input class="value-bar" id="reg-email" type="email" placeholder="Email">
+
+            <label class="login-label" for="reg-password">Lösenord</label>
             <input class="value-bar" id="reg-password" type="password" placeholder="Lösenord">
+
             <div id="reg-error" class="trade-message error"></div>
             <div id="reg-success" class="trade-message success"></div>
-            <button class="buy-btn" id="reg-btn">Skapa konto</button>
+            <button class="buy-btn" type="submit">Skapa konto</button>
             <p class="auth-link">Har du redan ett konto? <a href="login.html">Logga in</a></p>
-        </div>
+        </form>
     </div>
 
     <script src="index.js"></script>
